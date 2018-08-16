@@ -48,7 +48,8 @@ public class ProducerExample {
                 "\"fields\": [" +
                 "{\"name\": \"time\", \"type\": \"long\"}," +
                 "{\"name\": \"site\", \"type\": \"string\"}," +
-                "{\"name\": \"ip\", \"type\": \"string\"}" +
+                "{\"name\": \"ip\", \"type\": \"string\"}," +
+                "{\"name\": \"source\", \"type\": [\"null\", \"string\"], \"default\": null}" +
                 "]}";
         Producer<String, GenericRecord> producer = new KafkaProducer<String, GenericRecord>(props);
 
@@ -65,6 +66,7 @@ public class ProducerExample {
             page_visit.put("time", runtime);
             page_visit.put("site", site);
             page_visit.put("ip", ip);
+            page_visit.put("source", "ProducerExample.java");
 
             ProducerRecord<String, GenericRecord> data = new ProducerRecord<String, GenericRecord>(
                     "page_visits", ip, page_visit);
