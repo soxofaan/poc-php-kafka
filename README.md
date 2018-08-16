@@ -26,6 +26,7 @@ Python producing and consuming
 - `docker-compose run --rm python python src/produce.py <nb messages>` To produce a couple of messages with Python
 - `docker-compose run --rm python python src/consume.py` To launch a Python consumer
 - `docker-compose run --rm python python src/consume_raw.py` To launch a Python consumer for raw Kafka messages (without Avro deserialization)
+- `docker-compose run --rm python python src/schemaregistry.py` To dump the used schemas and versions from the schema registry
 
 Tear down
 
