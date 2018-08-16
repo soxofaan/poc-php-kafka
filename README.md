@@ -23,6 +23,7 @@ PHP producing and consuming
 - `docker-compose run --rm php php src/consume.php` To launch a PHP consumer
 
 Python producing and consuming
+- `docker-compose run --rm python python src/produce.py <nb messages>` To produce a couple of messages with Python
 - `docker-compose run --rm python python src/consume.py` To launch a Python consumer
 - `docker-compose run --rm python python src/consume_raw.py` To launch a Python consumer for raw Kafka messages (without Avro deserialization)
 
