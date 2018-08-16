@@ -6,15 +6,28 @@ POC the usage of Kafka with AVRO messages and the schema registry to manage the 
 Usage
 -----
 
+Kafka cluster set up
+
 - `docker-compose up -d` To start kafka and zookeeper
 - `docker-compose exec kafka kafka-topics.sh --create --zookeeper zookeeper --replication-factor 1 --partitions 5 --topic page_visits`
+
+Java producing and consuming 
+
 - `docker-compose run --rm java java -jar producer/target/java-producer-1.0-SNAPSHOT-jar-with-dependencies.jar <nb messages> http://schemaregistry:8081` To produce one or more messages with java
 - `docker-compose run --rm java java -jar consumer/target/java-consumer-1.0-SNAPSHOT-jar-with-dependencies.jar http://schemaregistry:8081` To launch a java consumer
+
+PHP producing and consuming
+
 - Before running the PHP scripts, use Composer to setup up the dependencies and autoloader: from within `php` folder run `docker-compose run --rm php composer install`
 - `docker-compose run --rm php php src/produce.php <nb messages>` To produce one or more messages with PHP
 - `docker-compose run --rm php php src/consume.php` To launch a PHP consumer
+
+Python producing and consuming
 - `docker-compose run --rm python python src/consume.py` To launch a Python consumer
 - `docker-compose run --rm python python src/consume_raw.py` To launch a Python consumer for raw Kafka messages (without Avro deserialization)
+
+Tear down
+
 - `docker-compose down --remove-orphans -v` To stop everything
 
 Note: All consumers are created in the same group and consume the same topic. It means that a message won't be consumed twice by these consumers.
