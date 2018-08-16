@@ -16,6 +16,11 @@ Java producing and consuming
 - `docker-compose run --rm java java -jar producer/target/java-producer-1.0-SNAPSHOT-jar-with-dependencies.jar <nb messages> http://schemaregistry:8081` To produce one or more messages with java
 - `docker-compose run --rm java java -jar consumer/target/java-consumer-1.0-SNAPSHOT-jar-with-dependencies.jar http://schemaregistry:8081` To launch a java consumer
 
+This POC comes with pre-built jars for Java. To build them through docker containers:
+- `docker-compose run --rm java bash -c "cd producer && mvn package"`
+- `docker-compose run --rm java bash -c "cd consumer && mvn package"`
+
+
 PHP producing and consuming
 
 - Before running the PHP scripts, use Composer to setup up the dependencies and autoloader: from within `php` folder run `docker-compose run --rm php composer install`

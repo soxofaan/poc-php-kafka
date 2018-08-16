@@ -17,9 +17,10 @@ services:
       - default
 
   java:
-    image: java
+    image: maven:3-jdk-8-alpine
     volumes:
       - ./java:/data
+      - ./java/.m2:/root/.m2
     working_dir: /data
     depends_on:
       - kafka
