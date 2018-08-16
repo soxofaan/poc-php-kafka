@@ -13,8 +13,8 @@ Kafka cluster set up
 
 Java producing and consuming 
 
-- `docker-compose run --rm java java -jar producer/target/java-producer-1.0-SNAPSHOT-jar-with-dependencies.jar <nb messages> http://schemaregistry:8081` To produce one or more messages with java
-- `docker-compose run --rm java java -jar consumer/target/java-consumer-1.0-SNAPSHOT-jar-with-dependencies.jar http://schemaregistry:8081` To launch a java consumer
+- `docker-compose run --rm java java -jar producer/target/java-producer-1.0-SNAPSHOT-jar-with-dependencies.jar <nb messages>` To produce one or more messages with java
+- `docker-compose run --rm java java -jar consumer/target/java-consumer-1.0-SNAPSHOT-jar-with-dependencies.jar` To launch a java consumer
 
 This POC comes with pre-built jars for Java. To build them through docker containers:
 - `docker-compose run --rm java bash -c "cd producer && mvn package"`

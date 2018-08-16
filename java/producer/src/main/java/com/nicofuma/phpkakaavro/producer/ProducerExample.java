@@ -28,12 +28,11 @@ import java.util.Random;
 
 public class ProducerExample {
     public static void main(String[] args){
-        if (args.length != 2) {
-            System.out.println("Please provide command line arguments: numEvents schemaRegistryUrl");
-            System.exit(-1);
+        long events = 5;
+        if (args.length >= 1) {
+            events = Long.parseLong(args[0]);
         }
-        long events = Long.parseLong(args[0]);
-        String url = args[1];
+        String url = "http://schemaregistry:8081";
 
         Properties props = new Properties();
         props.put("bootstrap.servers", "kafka:9092");
@@ -58,7 +57,7 @@ public class ProducerExample {
 
         Random rnd = new Random();
         for (long nEvents = 0; nEvents < events; nEvents++) {
-            long runtime = new Date().getTime();
+            long runtime = new Date().getTime() / 1000;
             String site = "www.example.com";
             String ip = "192.168.2." + rnd.nextInt(255);
 

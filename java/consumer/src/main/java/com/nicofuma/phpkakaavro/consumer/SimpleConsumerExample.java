@@ -38,17 +38,12 @@ public class SimpleConsumerExample {
     private static SimpleConsumerExample sessionizer;
 
     public static void main(String[] args) {
-        if (args.length != 1) {
-            System.out.println("Please provide command line arguments: "
-                    + "schemaRegistryUrl");
-            System.exit(-1);
-        }
 
         // currently hardcoding a lot of parameters, for simplicity
         String zookeeper = "zookeeper:2181";
         String groupId = "SimpleConsumerExample";
         String inputTopic = "page_visits";
-        String url = args[0];
+        String url = "http://schemaregistry:8081";
 
         // Typically events are considered to be part of the same session if they are less than 30 minutes apart
         // To make this example show interesting results sooner, we limit the interval to 5 seconds
