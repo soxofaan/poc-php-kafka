@@ -13,7 +13,8 @@ $schema = <<<_JSON
     [
         {"name": "time", "type": "long"},
         {"name": "site", "type": "string"},
-        {"name": "ip", "type": "string"}
+        {"name": "ip", "type": "string"},
+        {"name": "source", "type": ["null", "string"], "default": null}
     ]
 }
 _JSON
@@ -40,6 +41,7 @@ for ($i = 0; $i < $nb ; $i++) {
         'time' => time(),
         'site' => 'www.example.com',
         'ip' => '192.168.2.'.mt_rand(0, 255),
+        'source' => 'produce.php',
     ], null, null, null, $format);
 }
 

@@ -30,7 +30,8 @@ def main():
         [
             {"name": "time", "type": "long"},
             {"name": "site", "type": "string"},
-            {"name": "ip", "type": "string"}
+            {"name": "ip", "type": "string"},
+            {"name": "source", "type": ["null", "string"], "default": null}
         ]
     }
     '''
@@ -49,7 +50,8 @@ def main():
         value = {
             'time': int(time.time()),
             'site': 'www.example.com',
-            'ip': ip
+            'ip': ip,
+            'source': 'produce.py',
         }
         producer.produce(topic=topic, key=ip, value=value)
 
