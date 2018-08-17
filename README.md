@@ -8,18 +8,15 @@ Usage
 
 Kafka cluster set up
 
-- `docker-compose up -d` To start kafka and zookeeper
-- `docker-compose exec kafka kafka-topics.sh --create --zookeeper zookeeper --replication-factor 1 --partitions 5 --topic page_visits`
+- `docker-compose up -d` To start the services (zookeeper, kafka, schema registry)
+- Optionally: create the kafka topic "page_visits": 
+    `docker-compose exec kafka kafka-topics --create --zookeeper zookeeper --replication-factor 1 --partitions 5 --topic page_visits`. 
+    Note: As the topic is created with 5 partitions, you can't handle more than 5 messages at the same time.
 
 Java producing and consuming 
 
 - `docker-compose run --rm java java -jar producer/target/java-producer-1.0-SNAPSHOT-jar-with-dependencies.jar <nb messages>` To produce one or more messages with java
 - `docker-compose run --rm java java -jar consumer/target/java-consumer-1.0-SNAPSHOT-jar-with-dependencies.jar` To launch a java consumer
-
-This POC comes with pre-built jars for Java. To build them through docker containers:
-- `docker-compose run --rm java bash -c "cd producer && mvn package"`
-- `docker-compose run --rm java bash -c "cd consumer && mvn package"`
-
 
 PHP producing and consuming
 
@@ -33,12 +30,22 @@ Python producing and consuming
 - `docker-compose run --rm python python src/consume_raw.py` To launch a Python consumer for raw Kafka messages (without Avro deserialization)
 - `docker-compose run --rm python python src/schemaregistry.py` To dump the used schemas and versions from the schema registry
 
-Tear down
+Kafka cluster inspection, using the built-in kafka tools
+- `docker-compose exec kafka kafka-topics --zookeeper zookeeper --list` to list the existing kafka topics
+- `docker-compose exec kafka kafka-console-consumer --bootstrap-server kafka:9092 --topic page_visits --from-beginning` to use the standard kafka console consumer
+- `docker-compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --list` to list the consumer groups
+
+Tear down cluster
 
 - `docker-compose down --remove-orphans -v` To stop everything
 
+Java building: this POC comes with pre-built jars for Java. 
+To (re)build them through docker containers:
+- `docker-compose run --rm java bash -c "cd producer && mvn package"`
+- `docker-compose run --rm java bash -c "cd consumer && mvn package"`
+
+
 Note: All consumers are created in the same group and consume the same topic. It means that a message won't be consumed twice by these consumers.
-Note: As the topic is created with 5 partitions, you can't handle more than 5 messages at the same time.
 
 Note
 ----
