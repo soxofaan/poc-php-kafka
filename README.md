@@ -15,20 +15,20 @@ Kafka cluster set up
 
 Java producing and consuming 
 
-- `docker-compose run --rm java java -jar producer/target/java-producer-1.0-SNAPSHOT-jar-with-dependencies.jar <nb messages>` To produce one or more messages with java
-- `docker-compose run --rm java java -jar consumer/target/java-consumer-1.0-SNAPSHOT-jar-with-dependencies.jar` To launch a java consumer
+- `docker-compose exec java java -jar producer/target/java-producer-1.0-SNAPSHOT-jar-with-dependencies.jar <nb messages>` To produce one or more messages with java
+- `docker-compose exec java java -jar consumer/target/java-consumer-1.0-SNAPSHOT-jar-with-dependencies.jar` To launch a java consumer
 
 PHP producing and consuming
 
 - Before running the PHP scripts, use Composer to setup up the dependencies and autoloader: from within `php` folder run `docker-compose run --rm php composer install`
-- `docker-compose run --rm php php src/produce.php <nb messages>` To produce one or more messages with PHP
-- `docker-compose run --rm php php src/consume.php` To launch a PHP consumer
+- `docker-compose exec php php src/produce.php <nb messages>` To produce one or more messages with PHP
+- `docker-compose exec php php src/consume.php` To launch a PHP consumer
 
 Python producing and consuming
-- `docker-compose run --rm python python src/produce.py <nb messages>` To produce a couple of messages with Python
-- `docker-compose run --rm python python src/consume.py` To launch a Python consumer
-- `docker-compose run --rm python python src/consume_raw.py` To launch a Python consumer for raw Kafka messages (without Avro deserialization)
-- `docker-compose run --rm python python src/schemaregistry.py` To dump the used schemas and versions from the schema registry
+- `docker-compose exec python python src/produce.py <nb messages>` To produce a couple of messages with Python
+- `docker-compose exec python python src/consume.py` To launch a Python consumer
+- `docker-compose exec python python src/consume_raw.py` To launch a Python consumer for raw Kafka messages (without Avro deserialization)
+- `docker-compose exec python python src/schemaregistry.py` To dump the used schemas and versions from the schema registry
 
 Kafka cluster inspection, using the built-in kafka tools
 - `docker-compose exec kafka kafka-topics --zookeeper zookeeper --list` to list the existing kafka topics
@@ -41,8 +41,8 @@ Tear down cluster
 
 Java building: this POC comes with pre-built jars for Java. 
 To (re)build them through docker containers:
-- `docker-compose run --rm java bash -c "cd producer && mvn package"`
-- `docker-compose run --rm java bash -c "cd consumer && mvn package"`
+- `docker-compose exec java bash -c "cd producer && mvn package"`
+- `docker-compose exec java bash -c "cd consumer && mvn package"`
 
 
 Note: All consumers are created in the same group and consume the same topic. It means that a message won't be consumed twice by these consumers.
