@@ -15,6 +15,7 @@ services:
       - schemaregistry
     networks:
       - default
+    command: php -i
 
   java:
     image: maven:3-jdk-8-alpine
@@ -27,6 +28,7 @@ services:
       - schemaregistry
     networks:
       - default
+    command: java -version
 
   python:
     build:
@@ -39,6 +41,7 @@ services:
       - schemaregistry
     networks:
       - default
+    command: python -V
 
   zookeeper:
     image: wurstmeister/zookeeper
