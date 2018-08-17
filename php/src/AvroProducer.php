@@ -22,17 +22,17 @@ class AvroProducer
         $this->serializer = new MessageSerializer(new CachedSchemaRegistryClient($registryUrl), $options);
     }
 
-    public function produce($partition, $msgflags, $value, $key = null, $keySchema = null, $valueSchema = null, $format = null)
+    public function produce($partition, $msgflags, $value, $key = null, $keySchema = null, $valueSchema = null)
     {
         $keySchema = $keySchema ?: $this->defaultKeySchema;
         $valueSchema = $valueSchema ?: $this->defaultValueSchema;
 
         if ($value && $valueSchema) {
-            $value = $this->serializer->encodeRecordWithSchema($this->producer->getName(), $valueSchema, $value, false, $format);
+            $value = $this->serializer->encodeRecordWithSchema($this->producer->getName(), $valueSchema, $value, false);
         }
 
         if ($key && $keySchema) {
-            $key = $this->serializer->encodeRecordWithSchema($this->producer->getName(), $keySchema, $key, true, $format);
+            $key = $this->serializer->encodeRecordWithSchema($this->producer->getName(), $keySchema, $key, true);
         }
 
         return $this->producer->produce($partition, $msgflags, $value, $key);

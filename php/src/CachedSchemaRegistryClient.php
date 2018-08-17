@@ -81,23 +81,6 @@ class CachedSchemaRegistryClient
     }
 
     /**
-     * Returns the version of a registered schema
-     *
-     * @param string $subject
-     * @param AvroSchema $schema
-     *
-     * @return int
-     */
-    public function getSchemaVersion($subject, AvroSchema $schema)
-    {
-        if (!isset($this->subjectToSchemaVersions[$subject][$schema])) {
-            $this->cacheSchemaDetails($subject, $schema);
-        }
-
-        return $this->subjectToSchemaVersions[$subject][$schema];
-    }
-
-    /**
      * Returns the id of a registered schema
      *
      * @param string $subject
@@ -159,28 +142,6 @@ class CachedSchemaRegistryClient
         $schema = AvroSchema::parse($response['schema']);
 
         $this->cacheSchema($schema, $schemaId);
-
-        return $schema;
-    }
-
-    public function getBySubjectAndVersion($subject, $version)
-    {
-        if (isset($this->subjectVersionToSchema[$subject][$version])) {
-            return $this->subjectVersionToSchema[$subject][$version];
-        }
-
-        $url = sprintf('/subjects/%s/versions/%d', $subject, $version);
-        list($status, $response) = $this->sendRequest($url, 'GET');
-
-        if ($status === 404) {
-            throw new RuntimeException('Schema not found');
-        } else if (!($status >= 200 || $status < 300)) {
-            throw new \RuntimeException('Unable to get schema for the specific ID: '.$status);
-        }
-
-        $schema = AvroSchema::parse($response['schema']);
-
-        $this->cacheSchemaDetails($subject, $schema);
 
         return $schema;
     }

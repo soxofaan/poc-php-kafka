@@ -2,8 +2,7 @@
 
 class MessageSerializer
 {
-    const MAGIC_BYTE_SCHEMAID = 0;
-    const MAGIC_BYTE_SUBJECT_VERSION = 1;
+    const MAGIC_BYTE = 0;
 
     private $idToDecoderFunc = [];
     private $subjectVersionToDecoderFunc = [];
@@ -18,7 +17,6 @@ class MessageSerializer
     private $registry;
 
     private $registerMissingSchemas = false;
-    private $defaultEncodingFormat = self::MAGIC_BYTE_SCHEMAID;
 
     public function __construct(CachedSchemaRegistryClient $registry, $options = [])
     {
@@ -26,10 +24,6 @@ class MessageSerializer
 
         if (isset($options['register_missing_schemas'])) {
             $this->registerMissingSchemas = $options['register_missing_schemas'];
-        }
-
-        if (isset($options['default_encoding_format'])) {
-            $this->defaultEncodingFormat = $options['default_encoding_format'];
         }
     }
 
@@ -57,58 +51,10 @@ class MessageSerializer
         // write the header
 
         // magic byte
-        $io->write(pack('C', static::MAGIC_BYTE_SCHEMAID));
+        $io->write(pack('C', static::MAGIC_BYTE));
 
         // write the schema ID in network byte order (big end)
         $io->write(pack('N', $schemaId));
-
-        // write the record to the rest of it
-        // Create an encoder that we'll write to
-        $encoder = new AvroIOBinaryEncoder($io);
-
-        // write the object in 'obj' as Avro to the fake file...
-        $writer->write($record, $encoder);
-
-        return $io->string();
-    }
-
-    /**
-     * Encode a record with a given schema id.
-     *
-     * @param string $subject
-     * @param int $version
-     * @param array $record A data to serialize
-     * @param bool $isKey If the record is a key
-     *
-     * @return AvroIODatumWriter encoder object
-     */
-    public function encodeRecordWithSubjectAndVersion($subject, $version, array $record, $isKey = false)
-    {
-        if (! isset($this->subjectVersionToWriters[$subject][$version])) {
-            $schema = $this->registry->getBySubjectAndVersion($subject, $version);
-
-            $this->subjectVersionToWriters[$subject][$version] = new AvroIODatumWriter($schema);
-        }
-
-        $writer = $this->subjectVersionToWriters[$subject][$version];
-
-        $io = new AvroStringIO();
-
-        // write the header
-
-        // magic byte
-        $io->write(pack('C', static::MAGIC_BYTE_SUBJECT_VERSION));
-
-        // write the subject length in network byte order (big end)
-        $io->write(pack('N', strlen($subject)));
-
-        // then the subject
-        foreach (str_split($subject) as $letter) {
-            $io->write(pack('C', ord($letter)));
-        }
-
-        // and finally the version
-        $io->write(pack('N', $version));
 
         // write the record to the rest of it
         // Create an encoder that we'll write to
@@ -131,49 +77,25 @@ class MessageSerializer
      *
      * @return string Encoded record with schema ID as bytes
      */
-    public function encodeRecordWithSchema($topic, AvroSchema $schema, array $record, $isKey = false, $format = null)
+    public function encodeRecordWithSchema($topic, AvroSchema $schema, array $record, $isKey = false)
     {
         $suffix = $isKey ? '-key' : '-value';
         $subject = $topic.$suffix;
 
-        $format = $format === null ? $this->defaultEncodingFormat : $format;
-
-        switch ($format) {
-            case self::MAGIC_BYTE_SUBJECT_VERSION:
-                try {
-                    $version = $this->registry->getSchemaVersion($subject, $schema);
-                } catch (\RuntimeException $e) {
-                    if ($this->registerMissingSchemas) {
-                        $this->registry->register($subject, $schema);
-                        $version = $this->registry->getSchemaVersion($subject, $schema);
-                    } else {
-                        throw $e;
-                    }
-                }
-
-                $this->subjectVersionToWriters[$subject][$version] = new AvroIODatumWriter($schema);
-
-                return $this->encodeRecordWithSubjectAndVersion($subject, $version, $record, $isKey);
-                break;
-            case self::MAGIC_BYTE_SCHEMAID:
-                try {
-                    $id = $this->registry->getSchemaId($subject, $schema);
-                } catch (\RuntimeException $e) {
-                    if ($this->registerMissingSchemas) {
-                        $this->registry->register($subject, $schema);
-                        $id = $this->registry->getSchemaId($subject, $schema);
-                    } else {
-                        throw $e;
-                    }
-                }
-
-                $this->idToWriters[$id] = new AvroIODatumWriter($schema);
-
-                return $this->encodeRecordWithSchemaId($id, $record, $isKey);
-                break;
-            default:
-                throw new \RuntimeException('Unsuported format: '.$format);
+        try {
+            $id = $this->registry->getSchemaId($subject, $schema);
+        } catch (\RuntimeException $e) {
+            if ($this->registerMissingSchemas) {
+                $this->registry->register($subject, $schema);
+                $id = $this->registry->getSchemaId($subject, $schema);
+            } else {
+                throw $e;
+            }
         }
+        // TODO: do we have to do this on every encodeRecordWithSchema call?
+        $this->idToWriters[$id] = new AvroIODatumWriter($schema);
+
+        return $this->encodeRecordWithSchemaId($id, $record, $isKey);
     }
 
     /**
@@ -185,40 +107,21 @@ class MessageSerializer
      */
     public function decodeMessage($message)
     {
-        if (strlen($message) < 1) {
+        if (strlen($message) < 5) {
             throw new \RuntimeException('Message is too small to decode');
         }
 
         $io = new AvroStringIO($message);
 
-        $magic = unpack('C', $io->read(1));
-        $magic = $magic[1];
+        $header = unpack('Cmagic/Nid', $io->read(5));
 
-        switch ($magic) {
-            case static::MAGIC_BYTE_SCHEMAID:
-                $id = unpack('N', $io->read(4));
-                $id = $id[1];
-
-                $decoder = $this->getDecoderById($id);
-                break;
-            case static::MAGIC_BYTE_SUBJECT_VERSION:
-                $size = $io->read(4);
-                $subjectSize = unpack('N', $size);
-                $subjectBytes = unpack('C*', $io->read($subjectSize[1]));
-                $version = unpack('N', $io->read(4));
-
-                $version = $version[1];
-
-                $subject = '';
-                foreach ($subjectBytes as $subjectByte) {
-                    $subject .= chr($subjectByte);
-                }
-
-                $decoder = $this->getDecoderBySubjectAndVersion($subject, $version);
-                break;
-            default:
-                return $message;
+        $magic = $header['magic'];
+        if (static::MAGIC_BYTE !== $magic) {
+            throw new \RuntimeException('Message does not start with magic byte');
         }
+
+        $id = $header['id'];
+        $decoder = $this->getDecoderById($id);
 
         return $decoder($io);
     }
@@ -240,24 +143,4 @@ class MessageSerializer
         return $this->idToDecoderFunc[$schemaId];
     }
 
-    private function getDecoderBySubjectAndVersion($subject, $version)
-    {
-        if (isset($this->subjectVersionToDecoderFunc[$subject][$version])) {
-            return $this->subjectVersionToDecoderFunc[$subject][$version];
-        }
-
-        $schema = $this->registry->getBySubjectAndVersion($subject, $version);
-
-        $reader = new AvroIODatumReader($schema);
-
-        if (!isset($this->subjectVersionToDecoderFunc[$subject])) {
-            $this->subjectVersionToDecoderFunc[$subject] = [];
-        }
-
-        $this->subjectVersionToDecoderFunc[$subject][$version] = function(AvroIO $io) use ($reader) {
-            return $reader->read(new AvroIOBinaryDecoder($io));
-        };
-
-        return $this->subjectVersionToDecoderFunc[$subject][$version];
-    }
 }

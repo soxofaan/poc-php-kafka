@@ -34,15 +34,13 @@ $topic = new AvroProducer($kafka->newTopic($topic),'http://schemaregistry:8081',
 
 $start = microtime(true);
 for ($i = 0; $i < $nb ; $i++) {
-    $format = mt_rand(0, 2);
-    $format = $format === 2 ? null : $format;
 
     $topic->produce(RD_KAFKA_PARTITION_UA, 0, [
         'time' => time(),
         'site' => 'www.example.com',
         'ip' => '192.168.2.'.mt_rand(0, 255),
         'source' => 'produce.php',
-    ], null, null, null, $format);
+    ]);
 }
 
 $end = microtime(true);
